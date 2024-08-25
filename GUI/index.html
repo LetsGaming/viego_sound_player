@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sound Control Panel</title>
+    <!-- Bootstrap CSS (from static server) -->
+    <link
+        href="{{ url_for('serve_static', filename='bootstrap/css/bootstrap.min.css') }}"
+        rel="stylesheet"
+    />
+    <!-- Custom Styles -->
+    <link
+        rel="stylesheet"
+        href="{{ url_for('serve_static', filename='styles.css') }}"
+    />
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="mb-4 text-center text-primary">Sound Control Panel</h1>
+        <div class="row justify-content-center">
+            <div class="col-lg-6 col-md-8">
+                <form id="play-form" class="card p-4 bg-light">
+                    <div class="mb-3">
+                        <label for="language" class="form-label">Choose a language:</label>
+                        <select name="language" id="language" class="form-select">
+                            {% for language in languages %}
+                            <option value="{{ language }}">{{ language.upper() }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="category" class="form-label">Choose a category:</label>
+                        <select name="category" id="category" class="form-select">
+                            {% for category in categories %}
+                            <option value="{{ category }}">
+                                {{ category.replace('_', ' ').capitalize() }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="sound" class="form-label">Choose a sound:</label>
+                        <select name="sound" id="sound" class="form-select">
+                            <!-- Sound options will be populated dynamically -->
+                        </select>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input
+                        type="checkbox"
+                        name="loop"
+                        id="loop"
+                        class="form-check-input"
+                        />
+                        <label for="loop" class="form-check-label">Loop</label>
+                    </div>
+                    <div class="form-check form-switch mb-3">
+                        <input
+                            type="checkbox"
+                            id="toggle-sound"
+                            class="form-check-input"
+                        />
+                        <label for="toggle-sound" class="form-check-label">Play Sound</label>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <div id="toast" class="toast"></div>
+    </div>
+
+    <!-- Bootstrap JS (from static server) -->
+    <script src="{{ url_for('serve_static', filename='bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+    <!-- Custom Scripts -->
+    <script src="{{ url_for('serve_static', filename='script.js') }}"></script>
+</body>
+</html>
