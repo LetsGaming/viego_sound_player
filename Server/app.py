@@ -38,6 +38,11 @@ def validate_form_data(language, category, sound, loop):
 def index():
     return render_template('index.html', languages=LANGUAGES, categories=CATEGORIES)
 
+@app.route('/favicon.ico')
+def  favicon():
+    return send_from_directory(os.path.join(current_file_dir, 'static'), 'favicon.ico')
+
+
 @app.route('/play', methods=['POST'])
 def play_request():
     global stop_playback, current_sound

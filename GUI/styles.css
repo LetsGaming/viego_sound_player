@@ -11,6 +11,48 @@ header h1 {
   font-weight: 600;
 }
 
+/* General Dark Mode Styles */
+body.dark-mode {
+  background-color: #1e1e1e;
+  color: #ffffff;
+}
+
+/* Dark Mode Header */
+body.dark-mode header {
+  background-color: #333;
+  color: #fff;
+}
+
+/* Dark Mode Card */
+body.dark-mode .card {
+  background-color: #2e2e2e;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+}
+
+/* Dark Mode Form Controls */
+body.dark-mode .form-select,
+body.dark-mode .form-check-input {
+  background-color: #444;
+  color: #fff;
+  border-color: #555;
+}
+
+/* Dark Mode Toast */
+body.dark-mode .toast {
+  background-color: #444;
+}
+
+body.dark-mode label,
+body.dark-mode p ,
+body.dark-mode span {
+  color: white !important;
+}
+
+.darkmode-toggle-container {
+  float: right;
+  text-align: left;
+}
+
 /* Card Styles */
 .card {
   border-radius: 8px;

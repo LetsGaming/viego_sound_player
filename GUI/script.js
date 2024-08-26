@@ -5,6 +5,8 @@ const VOLUME_VALUE = document.getElementById("volume-value");
 const PLAY_ICON = document.getElementById("toggle-sound");
 const LOOP_ICON = document.getElementById("loop-icon");
 
+const DARK_MODE_TOGGLE = document.getElementById("darkModeToggle");
+
 const REPEAT_ON_URL = "/static/bootstrap/icons/repeat_on.svg";
 const REPEAT_OFF_URL = "/static/bootstrap/icons/repeat_off.svg";
 const START_SOUND_URL = "/static/bootstrap/icons/play-fill.svg";
@@ -27,42 +29,70 @@ async function fetchSVG(url) {
 }
 
 // Fetch SVGs for repeat icons
-(async function initializeIcons() {
+async function initializeIcons() {
   REPEAT_ON = await fetchSVG(REPEAT_ON_URL);
   REPEAT_OFF = await fetchSVG(REPEAT_OFF_URL);
   START_SOUND = await fetchSVG(START_SOUND_URL);
   STOP_SOUND = await fetchSVG(STOP_SOUND_URL);
   setLoopIcon();
   setPlayIcon();
-})();
+}
 
 // Function to update sound options based on selected language and category
 async function updateSounds() {
   const language = document.getElementById("language").value;
   const category = document.getElementById("category").value;
-  
+
   try {
-    const response = await fetch(`/sounds?language=${language}&category=${category}`);
+    const response = await fetch(
+      `/sounds?language=${language}&category=${category}`
+    );
     const sounds = await response.json();
     soundsData = sounds;
-    
+
     const soundSelect = document.getElementById("sound");
-    soundSelect.innerHTML = sounds.map(sound => 
-      `<option value="${sound.filename}">${sound.title}</option>`
-    ).join('');
+    soundSelect.innerHTML = sounds
+      .map(
+        (sound) => `<option value="${sound.filename}">${sound.title}</option>`
+      )
+      .join("");
   } catch (error) {
     console.error("Error fetching sounds:", error);
   }
 }
 
+function initializeDarkMode() {
+  // Load the user's theme preference
+  const darkMode = localStorage.getItem("darkMode");
+  if (darkMode === "enabled") {
+    document.body.classList.add("dark-mode");
+    DARK_MODE_TOGGLE.checked = true;
+  }
+}
+
 // Event listeners
+// Toggle dark mode
+DARK_MODE_TOGGLE.addEventListener("change", function () {
+  if (DARK_MODE_TOGGLE.checked) {
+    document.body.classList.add("dark-mode");
+    localStorage.setItem("darkMode", "enabled");
+  } else {
+    document.body.classList.remove("dark-mode");
+    localStorage.setItem("darkMode", "disabled");
+  }
+});
+
 document.getElementById("language").addEventListener("change", updateSounds);
 document.getElementById("category").addEventListener("change", updateSounds);
 
-document.getElementById("sound").addEventListener("change", function (event) {
-  const selectedSound = soundsData.find(sound => sound.filename === event.target.value);
-  DESCRIPTION.innerHTML = selectedSound ? selectedSound.description : '';
-});
+document.getElementById("sound").addEventListener("change", setDescription);
+
+function setDescription() {
+  const selectedSound = soundsData.find(
+    (sound) => sound.filename === document.getElementById("sound").value
+  );
+  DESCRIPTION.innerHTML = selectedSound ? selectedSound.description : "";
+}
 
 VOLUME_SLIDER.addEventListener("input", function () {
   VOLUME_VALUE.textContent = VOLUME_SLIDER.value;
@@ -88,7 +118,7 @@ async function handlePlaying() {
   isPlaying ? await handlePlaySound(data) : await handleStopSound();
 }
 
-function togglePlaying() { 
+function togglePlaying() {
   isPlaying = !isPlaying;
   setPlayIcon();
 }
@@ -148,8 +178,17 @@ function showToast(message) {
   const toast = document.getElementById("toast");
   toast.textContent = message;
   toast.className = "toast show";
-  setTimeout(() => toast.className = toast.className.replace("show", ""), 3000);
+  setTimeout(
+    () => (toast.className = toast.className.replace("show", "")),
+    3000
+  );
 }
 
-// Initial call to populate sounds
-updateSounds();
+async function init() {
+  await updateSounds();
+  setDescription();
+  await initializeIcons();
+  await initializeDarkMode();
+}
+
+init();
