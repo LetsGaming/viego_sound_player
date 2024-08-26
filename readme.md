@@ -58,9 +58,15 @@ viego_sound_player/
 │   ├── app.py                # Main Flask application
 │   ├── static/
 │   │   └── sounds/           # Directory containing sound files organized by language and category
-│   └── temp/                 # Temporary directory for pydub (not used with pygame)
+│   │   │   └── en/
+│   │   │       └── move/
 ├── GUI/
-│   └── index.html            # HTML template for the web interface
+│   ├── index.html            # HTML template for the web interface
+│   ├── script.js
+│   ├── styles.css
+│   └── bootstrap/
+│       └── css/
+│       └── js/
 ├── requirements.txt          # Python dependencies
 └── README.md                 # Project documentation
 ```

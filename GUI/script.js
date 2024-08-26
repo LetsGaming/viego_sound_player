@@ -1,107 +1,145 @@
-// Initial load
-updateSounds();
+// Initial constants and variables
+const DESCRIPTION = document.getElementById("desc");
+const VOLUME_SLIDER = document.getElementById("volume");
+const VOLUME_VALUE = document.getElementById("volume-value");
+const PLAY_ICON = document.getElementById("toggle-sound");
+const LOOP_ICON = document.getElementById("loop-icon");
 
-// Handle language and category changes
+const REPEAT_ON_URL = "/static/bootstrap/icons/repeat_on.svg";
+const REPEAT_OFF_URL = "/static/bootstrap/icons/repeat_off.svg";
+const START_SOUND_URL = "/static/bootstrap/icons/play-fill.svg";
+const STOP_SOUND_URL = "/static/bootstrap/icons/stop-fill.svg";
+let REPEAT_ON, REPEAT_OFF, START_SOUND, STOP_SOUND;
+
+let isPlaying = false;
+let loopEnabled = false;
+let soundsData = [];
+
+// Helper function to fetch SVG content
+async function fetchSVG(url) {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("Network response was not ok");
+    return await response.text();
+  } catch (error) {
+    console.error("There was a problem with the fetch operation:", error);
+  }
+}
+
+// Fetch SVGs for repeat icons
+(async function initializeIcons() {
+  REPEAT_ON = await fetchSVG(REPEAT_ON_URL);
+  REPEAT_OFF = await fetchSVG(REPEAT_OFF_URL);
+  START_SOUND = await fetchSVG(START_SOUND_URL);
+  STOP_SOUND = await fetchSVG(STOP_SOUND_URL);
+  setLoopIcon();
+  setPlayIcon();
+})();
+
+// Function to update sound options based on selected language and category
+async function updateSounds() {
+  const language = document.getElementById("language").value;
+  const category = document.getElementById("category").value;
+  
+  try {
+    const response = await fetch(`/sounds?language=${language}&category=${category}`);
+    const sounds = await response.json();
+    soundsData = sounds;
+    
+    const soundSelect = document.getElementById("sound");
+    soundSelect.innerHTML = sounds.map(sound => 
+      `<option value="${sound.filename}">${sound.title}</option>`
+    ).join('');
+  } catch (error) {
+    console.error("Error fetching sounds:", error);
+  }
+}
+
+// Event listeners
 document.getElementById("language").addEventListener("change", updateSounds);
 document.getElementById("category").addEventListener("change", updateSounds);
 
-// Handle toggle sound switch change
-let loopEnabled = false;
-document
-  .getElementById("toggle-sound")
-  .addEventListener("change", function (event) {
-    const data = setData();
+document.getElementById("sound").addEventListener("change", function (event) {
+  const selectedSound = soundsData.find(sound => sound.filename === event.target.value);
+  DESCRIPTION.innerHTML = selectedSound ? selectedSound.description : '';
+});
 
-    // Handle sound playing or stopping
-    if (event.target.checked) {
-      handlePlaySound(data);
-    } else {
-      handleStopSound();
-    }
-  });
+VOLUME_SLIDER.addEventListener("input", function () {
+  VOLUME_VALUE.textContent = VOLUME_SLIDER.value;
+  updateVolume(VOLUME_SLIDER.value);
+});
 
-// Function to update sound options based on selected language and category
-function updateSounds() {
-  const language = document.getElementById("language").value;
-  const category = document.getElementById("category").value;
+PLAY_ICON.addEventListener("click", handlePlaying);
 
-  fetch(`/sounds?language=${language}&category=${category}`)
-    .then((response) => response.json())
-    .then((sounds) => {
-      const soundSelect = document.getElementById("sound");
-      soundSelect.innerHTML = "";
-      sounds.forEach((sound) => {
-        const option = document.createElement("option");
-        option.value = sound;
-        option.textContent = sound;
-        soundSelect.appendChild(option);
-      });
-    })
-    .catch((error) => console.error("Error fetching sounds:", error));
+LOOP_ICON.addEventListener("click", toggleLoop);
+
+function toggleLoop() {
+  loopEnabled = !loopEnabled;
+  setLoopIcon();
 }
 
+function setLoopIcon() {
+  LOOP_ICON.innerHTML = loopEnabled ? REPEAT_ON : REPEAT_OFF;
+}
+
+async function handlePlaying() {
+  togglePlaying();
+  const data = setData();
+  isPlaying ? await handlePlaySound(data) : await handleStopSound();
+}
+
+function togglePlaying() { 
+  isPlaying = !isPlaying;
+  setPlayIcon();
+}
+function setPlayIcon() {
+  PLAY_ICON.innerHTML = isPlaying ? STOP_SOUND : START_SOUND;
+}
+
+// Function to prepare data for sound play
 function setData() {
   const formData = new FormData(document.getElementById("play-form"));
   const data = new URLSearchParams();
-
-  // Collect form data and check loop status
-  for (const pair of formData) {
-    if (pair[0] === "loop") {
-      loopEnabled = true;
-    }
-    data.append(pair[0], pair[1]);
-  }
-
-  // Append "loop" status if not already set
-  if (!loopEnabled) {
-    data.append("loop", "off");
-  }
-
+  formData.forEach((value, key) => data.append(key, value));
+  data.append("loop", loopEnabled ? "on" : "off");
   return data;
 }
 
 // Function to handle playing sound
-function handlePlaySound(data) {
-  document.querySelector('label[for="toggle-sound"]').textContent =
-    "Stop Sound";
-
-  fetch("/play", {
-    method: "POST",
-    body: data,
-  })
-    .then((response) => response.text())
-    .then((message) => {
-      showToast(message);
-      handleSoundFinish();
-    })
-    .catch((error) => showToast("Error playing sound: " + error));
-}
-
-// Function to handle stopping sound
-function handleStopSound() {
-  if (loopEnabled) {
-    fetch("/stop", {
-      method: "POST",
-    })
-      .then((response) => response.text())
-      .then((message) => {
-        showToast(message);
-        handleSoundFinish();
-      })
-      .catch((error) => showToast("Error stopping sound: " + error));
-  } else {
-    isPlaying = false;
-    document.querySelector('label[for="toggle-sound"]').textContent =
-      "Play Sound";
+async function handlePlaySound(data) {
+  try {
+    const response = await fetch("/play", { method: "POST", body: data });
+    const message = await response.text();
+    togglePlaying();
+    showToast(message);
+  } catch (error) {
+    showToast("Error playing sound: " + error);
   }
 }
 
-// Function to handle when sound finishes playing
-function handleSoundFinish() {
-  if (!loopEnabled) {
-    document.getElementById("toggle-sound").checked = false;
-    document.querySelector('label[for="toggle-sound"]').textContent =
-      "Play Sound";
+// Function to handle stopping sound
+async function handleStopSound() {
+  try {
+    const response = await fetch("/stop", { method: "POST" });
+    const message = await response.text();
+    togglePlaying();
+    showToast(message);
+  } catch (error) {
+    showToast("Error stopping sound: " + error);
+  }
+}
+
+// Function to update volume
+async function updateVolume(volume) {
+  try {
+    const response = await fetch("/volume", {
+      method: "POST",
+      body: new URLSearchParams({ volume: volume }),
+    });
+    const message = await response.text();
+    showToast(message);
+  } catch (error) {
+    showToast("Error setting volume: " + error);
   }
 }
 
@@ -110,7 +148,8 @@ function showToast(message) {
   const toast = document.getElementById("toast");
   toast.textContent = message;
   toast.className = "toast show";
-  setTimeout(() => {
-    toast.className = toast.className.replace("show", "");
-  }, 3000);
+  setTimeout(() => toast.className = toast.className.replace("show", ""), 3000);
 }
+
+// Initial call to populate sounds
+updateSounds();
