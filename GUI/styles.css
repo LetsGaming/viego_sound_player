@@ -43,7 +43,7 @@ body.dark-mode .toast {
 }
 
 body.dark-mode label,
-body.dark-mode p ,
+body.dark-mode p,
 body.dark-mode span {
   color: white !important;
 }
@@ -51,6 +51,10 @@ body.dark-mode span {
 .darkmode-toggle-container {
   float: right;
   text-align: left;
+}
+
+main {
+  margin-top: 15rem;
 }
 
 /* Card Styles */
@@ -76,12 +80,51 @@ body.dark-mode span {
   align-items: center;
 }
 
-.icon-checkbox {
-  cursor: pointer;
+.volume-container {
+  position: relative;
+  justify-content: center;
+}
+
+.volume-range {
+  width: 150px;
+  height: unset !important;
+}
+
+.footer-container {
+  flex-direction: column;
+}
+
+#volume-icon {
+  margin-right: 0.5rem;
+}
+
+#volume-value {
+  margin-left: 1rem;
+}
+
+footer button {
+  margin-left: 1rem;
+  margin-right: 1rem;
+}
+
+.controls-container {
+  display: flex;
+  justify-content: space-evenly;
+  width: 100%;
 }
 
 .icon-play {
   cursor: pointer;
+}
+
+.sound-progress-text-container {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+.sound-progress-text {
+  margin: 10px;
 }
 
 /* Toast Notification Styles */
@@ -95,15 +138,39 @@ body.dark-mode span {
   padding: 12px;
   position: fixed;
   z-index: 1050;
-  left: 50%;
-  transform: translateX(-50%);
-  bottom: 30px;
+  left: 43%;
+  bottom: 125px;
   font-size: 14px;
 }
 
 .toast.show {
   visibility: visible;
   animation: fadein 0.5s, fadeout 0.5s 2.5s;
+}
+
+@media (max-width: 768px) {
+  main {
+    margin-top: 1rem;
+  }
+
+  .footer-container {
+    display: grid !important;
+    justify-content: normal !important;
+  }
+
+  .sound-progress-text-container {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .volume-container {
+    margin-top: 1rem;
+  }
+
+  .toast {
+    left: 8%;
+    bottom: 280px;
+  }
 }
 
 @keyframes fadein {
