@@ -1,53 +1,58 @@
-// Constants and Variables
-const DARK_MODE_TOGGLE = document.getElementById("darkModeToggle");
-const DESCRIPTION = document.getElementById("desc");
-const VOLUME_SLIDER = document.getElementById("volume");
-const VOLUME_VALUE = document.getElementById("volume-value");
-const PLAY_BUTTON = document.getElementById("play-button");
-const REPEAT_BUTTON = document.getElementById("repeat-button");
-const PLAY_ICON = document.getElementById("play-icon");
-const LOOP_ICON = document.getElementById("repeat-icon");
-const VOLUME_ICON = document.getElementById("volume-icon");
-const SOUND_PROGRESS = document.getElementById("sound-progress");
-const MAX_SOUND_LENGTH = document.getElementById("sound-max-length");
-const CURRENT_SOUND_PROGRESS = document.getElementById(
-  "sound-current-progress"
-);
+// Constants and Configuration
+const ICONS = {
+  BASE_URL: "/static/bootstrap/icons",
+  REPEAT_ON: "repeat_on.svg",
+  REPEAT_OFF: "repeat_off.svg",
+  START_SOUND: "play-fill.svg",
+  STOP_SOUND: "stop-fill.svg",
+  VOLUME_UP: "volume-up.svg",
+  VOLUME_MUTE: "volume-mute.svg",
+};
 
-const BASE_ICON_URL = "/static/bootstrap/icons";
-const REPEAT_ON_URL = `${BASE_ICON_URL}/repeat_on.svg`;
-const REPEAT_OFF_URL = `${BASE_ICON_URL}/repeat_off.svg`;
-const START_SOUND_URL = `${BASE_ICON_URL}/play-fill.svg`;
-const STOP_SOUND_URL = `${BASE_ICON_URL}/stop-fill.svg`;
-const VOLUME_UP_URL = `${BASE_ICON_URL}/volume-up.svg`;
-const VOLUME_MUTE_URL = `${BASE_ICON_URL}/volume-mute.svg`;
+const ELEMENTS = {
+  DARK_MODE_TOGGLE: document.getElementById("darkModeToggle"),
+  DESCRIPTION: document.getElementById("desc"),
+  VOLUME_SLIDER: document.getElementById("volume"),
+  VOLUME_VALUE: document.getElementById("volume-value"),
+  PLAY_BUTTON: document.getElementById("play-button"),
+  REPEAT_BUTTON: document.getElementById("repeat-button"),
+  PLAY_ICON: document.getElementById("play-icon"),
+  LOOP_ICON: document.getElementById("repeat-icon"),
+  VOLUME_ICON: document.getElementById("volume-icon"),
+  SOUND_PROGRESS: document.getElementById("sound-progress"),
+  MAX_SOUND_LENGTH: document.getElementById("sound-max-length"),
+  CURRENT_SOUND_PROGRESS: document.getElementById("sound-current-progress"),
+  TOAST: document.getElementById("toast"),
+  SOUND_SELECT: document.getElementById("sound"),
+  LANGUAGE_SELECT: document.getElementById("language"),
+  CATEGORY_SELECT: document.getElementById("category"),
+};
 
-let REPEAT_ON, REPEAT_OFF, START_SOUND, STOP_SOUND, VOLUME_UP, VOLUME_MUTE;
+// Variables
+let iconsCache = {};
 let isPlaying = false;
 let loopEnabled = false;
 let soundsData = [];
-let currentSound = null;
 let soundInterval = null;
 
 // Helper Functions
-async function fetchSVG(url) {
-  try {
-    const response = await fetch(url);
-    if (!response.ok) throw new Error("Network response was not ok");
-    return await response.text();
-  } catch (error) {
-    console.error("There was a problem with the fetch operation:", error);
+async function fetchAndCacheIcon(key) {
+  if (!iconsCache[key]) {
+    try {
+      const response = await fetch(`${ICONS.BASE_URL}/${ICONS[key]}`);
+      if (!response.ok) throw new Error("Network response was not ok");
+      iconsCache[key] = await response.text();
+    } catch (error) {
+      console.error("Icon fetch failed:", error);
+    }
   }
+  return iconsCache[key];
 }
 
 function showToast(message) {
-  const toast = document.getElementById("toast");
-  toast.textContent = message;
-  toast.className = "toast show";
-  setTimeout(
-    () => (toast.className = toast.className.replace("show", "")),
-    3000
-  );
+  ELEMENTS.TOAST.textContent = message;
+  ELEMENTS.TOAST.className = "toast show";
+  setTimeout(() => ELEMENTS.TOAST.className = ELEMENTS.TOAST.className.replace("show", ""), 3000);
 }
 
 function setData() {
@@ -59,203 +64,188 @@ function setData() {
 }
 
 async function initializeIcons() {
-  REPEAT_ON = await fetchSVG(REPEAT_ON_URL);
-  REPEAT_OFF = await fetchSVG(REPEAT_OFF_URL);
-  START_SOUND = await fetchSVG(START_SOUND_URL);
-  STOP_SOUND = await fetchSVG(STOP_SOUND_URL);
-  VOLUME_UP = await fetchSVG(VOLUME_UP_URL);
-  VOLUME_MUTE = await fetchSVG(VOLUME_MUTE_URL);
-  setLoopIcon();
-  setPlayIcon();
-  setVolumeIcon();
+  // Filter out the BASE_URL key before fetching and caching the icons
+  await Promise.all(
+    Object.keys(ICONS)
+      .filter(key => key !== "BASE_URL")
+      .map(fetchAndCacheIcon)
+  );
+
+  setIcon(ELEMENTS.LOOP_ICON, loopEnabled ? "REPEAT_ON" : "REPEAT_OFF");
+  setIcon(ELEMENTS.PLAY_ICON, isPlaying ? "STOP_SOUND" : "START_SOUND");
+  setIcon(ELEMENTS.VOLUME_ICON, ELEMENTS.VOLUME_SLIDER.value > 0 ? "VOLUME_UP" : "VOLUME_MUTE");
+}
+
+function setIcon(element, iconKey) {
+  element.innerHTML = iconsCache[iconKey];
 }
 
 // Update Functions
 async function updateSounds() {
-  const language = document.getElementById("language").value;
-  const category = document.getElementById("category").value;
+  const language = ELEMENTS.LANGUAGE_SELECT.value;
+  const category = ELEMENTS.CATEGORY_SELECT.value;
   try {
-    const response = await fetch(
-      `/sounds?language=${language}&category=${category}`
-    );
-    const sounds = await response.json();
-    soundsData = sounds;
-    const soundSelect = document.getElementById("sound");
-    soundSelect.innerHTML = sounds
-      .map(
-        (sound) => `<option value="${sound.filename}">${sound.title}</option>`
-      )
-      .join("");
+    const response = await fetch(`/sounds?language=${language}&category=${category}`);
+    soundsData = await response.json();
+    populateSoundOptions(soundsData);
   } catch (error) {
     console.error("Error fetching sounds:", error);
   }
 }
 
-function setSoundLength() {
-  const selectedSound = soundsData.find(
-    (sound) => sound.filename === document.getElementById("sound").value
-  );
+function populateSoundOptions(sounds) {
+  ELEMENTS.SOUND_SELECT.innerHTML = sounds.map(sound => 
+    `<option value="${sound.filename}">${sound.title}</option>`).join("");
+  setDescriptionAndLength();
+}
+
+function setDescriptionAndLength() {
+  const selectedSound = soundsData.find(sound => sound.filename === ELEMENTS.SOUND_SELECT.value);
   if (selectedSound) {
+    ELEMENTS.DESCRIPTION.innerHTML = selectedSound.description;
     const formattedLength = selectedSound.length.toFixed(2);
-    SOUND_PROGRESS.max = formattedLength;
-    SOUND_PROGRESS.value = 0;
-    MAX_SOUND_LENGTH.textContent = formattedLength;
-    CURRENT_SOUND_PROGRESS.textContent = "0.00";
+    ELEMENTS.SOUND_PROGRESS.max = formattedLength;
+    ELEMENTS.SOUND_PROGRESS.value = 0;
+    ELEMENTS.MAX_SOUND_LENGTH.textContent = formattedLength;
+    ELEMENTS.CURRENT_SOUND_PROGRESS.textContent = "0.00";
   } else {
-    SOUND_PROGRESS.max = 0;
-    MAX_SOUND_LENGTH.textContent = "0.00";
-    CURRENT_SOUND_PROGRESS.textContent = "0.00";
+    resetSoundProgress();
   }
 }
 
+function resetSoundProgress() {
+  ELEMENTS.SOUND_PROGRESS.max = 0;
+  ELEMENTS.MAX_SOUND_LENGTH.textContent = "0.00";
+  ELEMENTS.CURRENT_SOUND_PROGRESS.textContent = "0.00";
+}
+
 function updateSoundProgress() {
-  const max = parseInt(SOUND_PROGRESS.max);
-  SOUND_PROGRESS.value = 0;
+  const max = parseInt(ELEMENTS.SOUND_PROGRESS.max);
+  ELEMENTS.SOUND_PROGRESS.value = 0;
   soundInterval = setInterval(() => {
-    if (SOUND_PROGRESS.value < max) {
-      const newValue = parseFloat(SOUND_PROGRESS.value) + 1;
-      SOUND_PROGRESS.value = newValue;
-      CURRENT_SOUND_PROGRESS.textContent = newValue.toFixed(2);
+    if (ELEMENTS.SOUND_PROGRESS.value < max) {
+      const newVal = parseFloat(ELEMENTS.SOUND_PROGRESS.value) + 1;
+      ELEMENTS.SOUND_PROGRESS.value = newVal
+      ELEMENTS.CURRENT_SOUND_PROGRESS.textContent = newVal.toFixed(2);
     } else {
-      if (!isPlaying) {
-        SOUND_PROGRESS.value = SOUND_PROGRESS.max;
-        CURRENT_SOUND_PROGRESS.textContent = SOUND_PROGRESS.max;
-        clearInterval(soundInterval);
-      } else {
-        SOUND_PROGRESS.value = 0;
-        CURRENT_SOUND_PROGRESS.textContent = "0.00";
-      }
+      handleEndOfSound();
     }
   }, 1000);
 }
 
-function setDescription() {
-  const selectedSound = soundsData.find(
-    (sound) => sound.filename === document.getElementById("sound").value
-  );
-  DESCRIPTION.innerHTML = selectedSound ? selectedSound.description : "";
-}
-
-// Event Listeners
-DARK_MODE_TOGGLE.addEventListener("change", function () {
-  if (DARK_MODE_TOGGLE.checked) {
-    document.body.classList.add("dark-mode");
-    localStorage.setItem("darkMode", "enabled");
+function handleEndOfSound() {
+  if (!isPlaying) {
+    ELEMENTS.SOUND_PROGRESS.value = ELEMENTS.SOUND_PROGRESS.max;
+    ELEMENTS.CURRENT_SOUND_PROGRESS.textContent = ELEMENTS.SOUND_PROGRESS.max;
+    clearInterval(soundInterval);
   } else {
-    document.body.classList.remove("dark-mode");
-    localStorage.setItem("darkMode", "disabled");
+    resetSoundProgress();
   }
-});
-
-document.getElementById("language").addEventListener("change", changeSelection);
-document.getElementById("category").addEventListener("change", changeSelection);
-
-document.getElementById("sound").addEventListener("change", function () {
-  setDescription();
-  setSoundLength();
-});
-
-async function changeSelection() {
-  await updateSounds();
-  setDescription();
-  setSoundLength();
 }
 
-VOLUME_SLIDER.addEventListener("input", function () {
-  const volumePercentage = parseInt(VOLUME_SLIDER.value * 100);
-  VOLUME_VALUE.textContent = `${volumePercentage}%`;
-});
+// Event Handlers
+function handleDarkModeToggle() {
+  document.body.classList.toggle("dark-mode", ELEMENTS.DARK_MODE_TOGGLE.checked);
+  localStorage.setItem("darkMode", ELEMENTS.DARK_MODE_TOGGLE.checked ? "enabled" : "disabled");
+}
 
-VOLUME_SLIDER.addEventListener("change", function () {
-  updateVolume(VOLUME_SLIDER.value);
-});
+function handleSelectionChange() {
+  updateSounds().then(setDescriptionAndLength);
+}
 
-PLAY_BUTTON.addEventListener("click", handlePlaying);
-REPEAT_BUTTON.addEventListener("click", toggleLoop);
+function handleSoundChange() {
+  setDescriptionAndLength();
+}
 
-// Toggle Functions
+function handleVolumeChange() {
+  updateVolumeText();
+  updateVolume(ELEMENTS.VOLUME_SLIDER.value);
+}
+
+function updateVolumeText() {
+  const volumePercentage = parseInt(ELEMENTS.VOLUME_SLIDER.value * 100);
+  ELEMENTS.VOLUME_VALUE.textContent = `${volumePercentage}%`;
+}
+
+async function updateVolume(volume) {
+  setIcon(ELEMENTS.VOLUME_ICON, volume > 0 ? "VOLUME_UP" : "VOLUME_MUTE");
+  try {
+    const response = await fetch("/volume", {
+      method: "POST",
+      body: new URLSearchParams({ volume }),
+    });
+    showToast(await response.text());
+  } catch (error) {
+    showToast("Error setting volume: " + error);
+  }
+}
+
 function togglePlaying() {
   isPlaying = !isPlaying;
-  setPlayIcon();
+  setIcon(ELEMENTS.PLAY_ICON, isPlaying ? "STOP_SOUND" : "START_SOUND");
 }
 
 function toggleLoop() {
   loopEnabled = !loopEnabled;
-  setLoopIcon();
+  setIcon(ELEMENTS.LOOP_ICON, loopEnabled ? "REPEAT_ON" : "REPEAT_OFF");
 }
 
-function setPlayIcon() {
-  PLAY_ICON.innerHTML = isPlaying ? STOP_SOUND : START_SOUND;
-}
-
-function setLoopIcon() {
-  LOOP_ICON.innerHTML = loopEnabled ? REPEAT_ON : REPEAT_OFF;
-}
-
-function setVolumeIcon() {
-  VOLUME_ICON.innerHTML = VOLUME_SLIDER.value > 0 ? VOLUME_UP : VOLUME_MUTE;
-}
-
-// Sound Control Functions
 async function handlePlaying() {
   togglePlaying();
-  isPlaying ? await handlePlaySound(setData()) : await handleStopSound();
+  if (isPlaying) {
+    await handlePlaySound(setData());
+  } else {
+    await handleStopSound();
+  }
 }
 
 async function handlePlaySound(data) {
   try {
     updateSoundProgress();
     const response = await fetch("/play", { method: "POST", body: data });
-    const message = await response.text();
-    togglePlaying();
-    showToast(message);
+    showToast(await response.text());
   } catch (error) {
     showToast("Error playing sound: " + error);
+  } finally {
+    togglePlaying();
   }
 }
 
 async function handleStopSound() {
   try {
     const response = await fetch("/stop", { method: "POST" });
-    const message = await response.text();
-    clearInterval(soundInterval);
-    togglePlaying();
-    showToast(message);
+    showToast(await response.text());
   } catch (error) {
     showToast("Error stopping sound: " + error);
-  }
-}
-
-async function updateVolume(volume) {
-  try {
-    setVolumeIcon();
-    const response = await fetch("/volume", {
-      method: "POST",
-      body: new URLSearchParams({ volume: volume }),
-    });
-    const message = await response.text();
-    showToast(message);
-  } catch (error) {
-    showToast("Error setting volume: " + error);
+  } finally {
+    clearInterval(soundInterval);
+    togglePlaying();
   }
 }
 
 // Initialization Functions
 function initializeDarkMode() {
-  const darkMode = localStorage.getItem("darkMode");
-  if (darkMode === "enabled") {
-    document.body.classList.add("dark-mode");
-    DARK_MODE_TOGGLE.checked = true;
-  }
+  const darkMode = localStorage.getItem("darkMode") === "enabled";
+  document.body.classList.toggle("dark-mode", darkMode);
+  ELEMENTS.DARK_MODE_TOGGLE.checked = darkMode;
 }
 
-async function init() {
+async function initializeApp() {
   await updateSounds();
   await initializeIcons();
   initializeDarkMode();
-  setDescription();
-  setSoundLength();
+  setDescriptionAndLength();
 }
 
+// Event Listeners
+ELEMENTS.DARK_MODE_TOGGLE.addEventListener("change", handleDarkModeToggle);
+ELEMENTS.LANGUAGE_SELECT.addEventListener("change", handleSelectionChange);
+ELEMENTS.CATEGORY_SELECT.addEventListener("change", handleSelectionChange);
+ELEMENTS.SOUND_SELECT.addEventListener("change", handleSoundChange);
+ELEMENTS.VOLUME_SLIDER.addEventListener("input", updateVolumeText);
+ELEMENTS.VOLUME_SLIDER.addEventListener("change", handleVolumeChange);
+ELEMENTS.PLAY_BUTTON.addEventListener("click", handlePlaying);
+ELEMENTS.REPEAT_BUTTON.addEventListener("click", toggleLoop);
+
 // Initialize the application
-init();
+initializeApp();
