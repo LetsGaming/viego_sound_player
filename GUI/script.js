@@ -225,7 +225,13 @@ async function handleStopSound() {
 
 // Initialization Functions
 function initializeDarkMode() {
-  const darkMode = localStorage.getItem("darkMode") === "enabled";
+  let darkMode = localStorage.getItem("darkMode") === "enabled";
+
+  if(!darkMode) {
+    // Get users preference
+    darkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+
   document.body.classList.toggle("dark-mode", darkMode);
   ELEMENTS.DARK_MODE_TOGGLE.checked = darkMode;
 }

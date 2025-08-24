@@ -6,8 +6,8 @@ from mutagen.oggvorbis import OggVorbis
 
 app = Flask(__name__, template_folder='../GUI', static_folder='../GUI')
 
-LANGUAGES = ['en', 'de', 'jp']
-CATEGORIES = ['general', 'move', 'long_move', 'encounter', 'attack', 'ability', 'kill', 'death', 'respawn', 'recall']
+LANGUAGES = ['en', 'de']
+CATEGORIES = ['general', 'move', 'long_move', 'encounter', 'attack', 'ability', 'kill', 'death', 'respawn', 'recall', 'music']
 
 current_file_dir = os.path.dirname(os.path.abspath(__file__))
 SOUNDS_PATH = os.path.join(current_file_dir, 'static', 'sounds')
@@ -58,7 +58,11 @@ def play_request():
     if validation_error:
         return f"Invalid form data: {validation_error}", 400
 
-    sound_path = os.path.join(SOUNDS_PATH, language, category, f"{sound}.ogg")
+    # Special handling for music category
+    if category == "music":
+        sound_path = os.path.join(SOUNDS_PATH, "music", f"{sound}.ogg")
+    else:
+        sound_path = os.path.join(SOUNDS_PATH, language, category, f"{sound}.ogg")
 
     if os.path.exists(sound_path):
         try:
@@ -133,10 +137,12 @@ def get_sounds():
     language = request.args.get('language')
     category = request.args.get('category')
 
-    if language not in LANGUAGES or category not in CATEGORIES:
-        return jsonify({'error': 'Invalid language or category'}), 400
-
-    sounds_path = os.path.join(SOUNDS_PATH, language, category)
+    if category == "music":
+        sounds_path = os.path.join(SOUNDS_PATH, "music")
+    else:
+        if language not in LANGUAGES or category not in CATEGORIES:
+            return jsonify({'error': 'Invalid language or category'}), 400
+        sounds_path = os.path.join(SOUNDS_PATH, language, category)
 
     if not os.path.exists(sounds_path):
         return jsonify({'error': 'Sounds directory not found'}), 404
@@ -146,21 +152,21 @@ def get_sounds():
         if sound_file.endswith('.ogg'):
             sound_name = os.path.splitext(sound_file)[0]
             sound_file_path = os.path.join(sounds_path, sound_file)
-            audio = OggVorbis(sound_file_path)  # Load the audio file
-            sound_length = audio.info.length  # Get the length in seconds
-            
+            audio = OggVorbis(sound_file_path)
+            sound_length = getattr(audio.info, "length", None) if hasattr(audio, "info") else None
+
             metadata = METADATA.get(sound_name, {})
             title = metadata.get('title', '')
             description = metadata.get('description', '')
-            
+
             sound_data.append({
                 'filename': sound_name,
                 'title': title if title else 'Unknown Title',
                 'description': description if description else 'No Description',
-                'length': sound_length  # Add the length property
+                'length': sound_length
             })
 
     return jsonify(sound_data)
 
 if __name__ == '__main__':
-    app.run(host='192.168.2.128')
+    app.run(host='0.0.0.0')
