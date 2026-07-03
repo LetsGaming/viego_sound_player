@@ -6,7 +6,7 @@ import json
 
 # --- Config ---
 URL = "https://wiki.leagueoflegends.com/en-us/Viego/Audio"
-BASE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "sounds")
+BASE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "server", "static", "sounds")
 LANGUAGE = "jp"  # change to 'en', 'de' if needed
 
 CATEGORY_MAP = {

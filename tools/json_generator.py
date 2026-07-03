@@ -47,7 +47,7 @@ def save_json_to_file(audio_json, file_path):
 def main():
     url = "https://leagueoflegends.fandom.com/wiki/Viego/LoL/Audio"
     current_file_dir = os.path.dirname(os.path.abspath(__file__))
-    json_file_path = os.path.join(current_file_dir, 'server', 'static', 'sounds_metadata.json')
+    json_file_path = os.path.join(current_file_dir, '..', 'server', 'static', 'sounds', 'sounds_metadata.json')
 
     content = fetch_webpage(url)
     soup = parse_html(content)
