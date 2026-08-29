@@ -1,0 +1,31 @@
+[project]
+name = "soundboard-framework"
+version = "0.1.0"
+description = "Reusable server + PWA framework for cosplay/character soundboards."
+requires-python = ">=3.11"
+dependencies = [
+    "Flask>=3.0",
+    "sounddevice>=0.5",
+    "soundfile>=0.13",
+    "numpy>=1.26",
+    "requests>=2.31",
+    "beautifulsoup4>=4.12",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+soundboard-serve = "soundboard_framework.cli.serve:main"
+soundboard-fetch = "soundboard_framework.cli.fetch:main"
+soundboard-new = "soundboard_framework.cli.new_character:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["soundboard_framework*"]
+
+[tool.setuptools.package-data]
+soundboard_framework = ["static/*", "templates/*"]
