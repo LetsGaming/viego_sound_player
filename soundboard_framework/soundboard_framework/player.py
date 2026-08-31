@@ -26,8 +26,7 @@ import threading
 import numpy as np
 import soundfile as sf
 
-import config
-from library import Sound
+from soundboard_framework.library import Sound
 
 log = logging.getLogger(__name__)
 
@@ -47,21 +46,30 @@ class _Playback:
         "fade_in_frames", "fade_out_frames", "fadeout_at", "finished",
     )
 
-    def __init__(self, sound: Sound, data: np.ndarray, samplerate: int) -> None:
+    def __init__(
+        self,
+        sound: Sound,
+        data: np.ndarray,
+        samplerate: int,
+        fade_in_ms: int,
+        fade_out_ms: int,
+    ) -> None:
         self.sound = sound
         self.data = data                     # float32, shape (frames, channels)
         self.samplerate = samplerate
         self.stream = None
         self.pos = 0                         # read position within data
         self.frames_done = 0                 # total frames rendered (monotonic)
-        self.fade_in_frames = int(config.FADE_IN_MS / 1000 * samplerate)
-        self.fade_out_frames = int(config.FADE_OUT_MS / 1000 * samplerate)
+        self.fade_in_frames = int(fade_in_ms / 1000 * samplerate)
+        self.fade_out_frames = int(fade_out_ms / 1000 * samplerate)
         self.fadeout_at: int | None = None   # frames_done at which fade-out began
         self.finished = False
 
 
 class Player:
-    def __init__(self) -> None:
+    def __init__(self, fade_in_ms: int, fade_out_ms: int) -> None:
+        self._fade_in_ms = fade_in_ms
+        self._fade_out_ms = fade_out_ms
         self._lock = threading.Lock()
         self._pb: _Playback | None = None
         self._loop: bool = False
@@ -93,7 +101,7 @@ class Player:
         if not self._available:
             raise RuntimeError("No audio output device is available on the server.")
         data, samplerate = sf.read(sound.path, dtype="float32", always_2d=True)
-        pb = _Playback(sound, data, samplerate)
+        pb = _Playback(sound, data, samplerate, self._fade_in_ms, self._fade_out_ms)
         pb.stream = sd.OutputStream(
             samplerate=samplerate,
             channels=data.shape[1],

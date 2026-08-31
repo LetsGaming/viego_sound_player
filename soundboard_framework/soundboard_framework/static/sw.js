@@ -1,9 +1,9 @@
 /* Caches the app shell so the panel opens instantly on convention Wi-Fi.
  * API calls always go to the network — playback state must be live. */
-const CACHE = "viego-shell-v1";
+const CACHE = "soundboard-shell-v1";
 const SHELL = [
   "/",
-  "/static/styles.css",
+  "/theme.css",
   "/static/app.js",
   "/manifest.webmanifest",
   "/favicon.ico",

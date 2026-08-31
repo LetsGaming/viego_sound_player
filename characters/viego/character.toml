@@ -1,0 +1,56 @@
+[character]
+name = "Viego"
+short_name = "Viego"
+description = "Remote control panel for the Viego cosplay sound player."
+filename_prefix_to_strip = "Viego_Original_"
+
+[audio]
+fade_in_ms = 400
+fade_out_ms = 300
+language_independent_categories = ["music"]
+
+[categories]
+order = ["general", "move", "long_move", "encounter", "attack", "ability", "kill", "death", "respawn", "recall", "music"]
+
+[categories.labels]
+general = "General"
+move = "Move"
+long_move = "Long move"
+encounter = "Encounter"
+attack = "Attack"
+ability = "Ability"
+kill = "Kill"
+death = "Death"
+respawn = "Respawn"
+recall = "Recall"
+music = "Music & SFX"
+unsorted = "Unsorted"
+
+[theme]
+abyss = "#0a0f12"
+mist = "#101a1e"
+mist_raised = "#16242a"
+edge = "#1e3038"
+glow = "#35e0b8"
+glow_soft = "rgba(53, 224, 184, 0.18)"
+bone = "#dce8e4"
+muted = "#7d9691"
+danger = "#e06060"
+font_display = "\"Palatino Linotype\", \"Book Antiqua\", Palatino, Georgia, serif"
+
+[voice_scraper]
+url = "https://wiki.leagueoflegends.com/en-us/Viego/Audio"
+
+[voice_scraper.category_map]
+Joke = "general"
+Taunt = "general"
+Ban = "general"
+Movement = "move"
+"Long movement" = "long_move"
+"First Encounter" = "encounter"
+Attack = "attack"
+Ability = "ability"
+Kill = "kill"
+Death = "death"
+Respawn = "respawn"
+Recall = "recall"

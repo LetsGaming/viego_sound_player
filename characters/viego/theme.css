@@ -1,0 +1,15 @@
+/* signature: mist glow on the playing tile */
+.tile.playing {
+  border-color: var(--glow);
+  animation: mist-pulse 2.4s ease-in-out infinite;
+}
+
+@keyframes mist-pulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(53, 224, 184, 0.25); }
+  50%      { box-shadow: 0 0 26px rgba(53, 224, 184, 0.55); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile.playing { animation: none; box-shadow: 0 0 14px rgba(53, 224, 184, 0.4); }
+  .tile:active { transform: none; }
+}

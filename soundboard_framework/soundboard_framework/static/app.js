@@ -1,4 +1,4 @@
-/* Viego Soundboard — client
+/* Soundboard — client
  *
  * One tap on a tile plays that sound on the server. Tapping the playing
  * tile again stops it. GET /api/status is polled so several devices (or a
@@ -27,9 +27,10 @@ const els = {
   toast: $("toast"),
 };
 
-const FAVORITES_KEY = "viego.favorites";
-const RECENT_KEY = "viego.recent";
-const LANG_KEY = "viego.language";
+const CHARACTER_NS = (typeof window !== "undefined" && window.SOUNDBOARD_CHARACTER) || "default";
+const FAVORITES_KEY = `${CHARACTER_NS}.favorites`;
+const RECENT_KEY = `${CHARACTER_NS}.recent`;
+const LANG_KEY = `${CHARACTER_NS}.language`;
 const RECENT_LIMIT = 12;
 
 const state = {

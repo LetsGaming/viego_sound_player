@@ -1,6 +1,6 @@
 """Sound library.
 
-Scans the sounds directory once at startup, merges in the metadata file and
+Scans a character's sounds directory once, merges in the metadata file and
 caches durations, so requests never touch the filesystem or re-parse audio
 files. Playback lookups go through the catalog, which also prevents any
 path-traversal via user input: only known, indexed files can be played.
@@ -11,10 +11,11 @@ import json
 import logging
 import os
 from dataclasses import dataclass, field
+from pathlib import Path
 
 import soundfile as sf
 
-import config
+from soundboard_framework.config import Character
 
 log = logging.getLogger(__name__)
 
@@ -43,7 +44,10 @@ class Sound:
 
 
 class Library:
-    def __init__(self) -> None:
+    def __init__(self, character: Character, sounds_dir: Path, metadata_path: Path) -> None:
+        self.character = character
+        self.sounds_dir = Path(sounds_dir)
+        self.metadata_path = Path(metadata_path)
         self.sounds: dict[str, Sound] = {}
         self.languages: list[str] = []
         self.categories: list[str] = []
@@ -59,24 +63,23 @@ class Library:
         languages: set[str] = set()
         categories: set[str] = set()
 
-        if not os.path.isdir(config.SOUNDS_DIR):
-            log.error("Sounds directory not found: %s", config.SOUNDS_DIR)
+        if not self.sounds_dir.is_dir():
+            log.error("Sounds directory not found: %s", self.sounds_dir)
             return
 
-        for entry in sorted(os.listdir(config.SOUNDS_DIR)):
-            entry_path = os.path.join(config.SOUNDS_DIR, entry)
-            if not os.path.isdir(entry_path):
+        for entry in sorted(os.listdir(self.sounds_dir)):
+            entry_path = self.sounds_dir / entry
+            if not entry_path.is_dir():
                 continue
 
-            if entry in config.LANGUAGE_INDEPENDENT_CATEGORIES:
+            if entry in self.character.language_independent_categories:
                 categories.add(entry)
                 self._index_folder(entry_path, language="-", category=entry)
             else:
-                # Treat as a language folder containing category folders.
                 languages.add(entry)
                 for category in sorted(os.listdir(entry_path)):
-                    category_path = os.path.join(entry_path, category)
-                    if not os.path.isdir(category_path):
+                    category_path = entry_path / category
+                    if not category_path.is_dir():
                         continue
                     categories.add(category)
                     self._index_folder(category_path, language=entry, category=category)
@@ -98,8 +101,8 @@ class Library:
             "categories": [
                 {
                     "id": c,
-                    "label": config.CATEGORY_LABELS.get(c, c.replace("_", " ").title()),
-                    "shared": c in config.LANGUAGE_INDEPENDENT_CATEGORIES,
+                    "label": self.character.category_labels.get(c, c.replace("_", " ").title()),
+                    "shared": c in self.character.language_independent_categories,
                 }
                 for c in self.categories
             ],
@@ -110,19 +113,19 @@ class Library:
 
     def _read_metadata(self) -> dict:
         try:
-            with open(config.METADATA_PATH, encoding="utf-8") as f:
+            with open(self.metadata_path, encoding="utf-8") as f:
                 return json.load(f)
         except FileNotFoundError:
-            log.warning("Metadata file not found: %s", config.METADATA_PATH)
+            log.warning("Metadata file not found: %s", self.metadata_path)
         except json.JSONDecodeError as exc:
             log.error("Metadata file is not valid JSON: %s", exc)
         return {}
 
-    def _index_folder(self, folder: str, language: str, category: str) -> None:
+    def _index_folder(self, folder: Path, language: str, category: str) -> None:
         for filename in sorted(os.listdir(folder)):
             if not filename.lower().endswith(".ogg"):
                 continue
-            path = os.path.join(folder, filename)
+            path = folder / filename
             name = os.path.splitext(filename)[0]
             duration = self._read_duration(path)
             meta = self._metadata.get(name, {})
@@ -135,26 +138,26 @@ class Library:
                 title=meta.get("title") or self._prettify(name),
                 description=meta.get("description") or "",
                 duration=duration,
-                path=path,
+                path=str(path),
             )
 
     @staticmethod
-    def _read_duration(path: str) -> float:
+    def _read_duration(path: Path) -> float:
         try:
-            info = sf.info(path)
+            info = sf.info(str(path))
             return info.frames / info.samplerate
         except Exception as exc:  # corrupt/odd file: keep it, just no duration
             log.warning("Could not read duration of %s: %s", path, exc)
             return 0.0
 
-    @staticmethod
-    def _prettify(filename: str) -> str:
-        """Fallback title from a filename like Viego_Original_Attack_12."""
-        name = filename.removeprefix("Viego_Original_")
+    def _prettify(self, filename: str) -> str:
+        """Fallback title from a filename like <Prefix>Attack_12."""
+        prefix = self.character.filename_prefix_to_strip
+        name = filename.removeprefix(prefix) if prefix else filename
         return name.replace("_", " ").strip() or filename
 
-    @staticmethod
-    def _order_categories(found: set[str]) -> list[str]:
-        ordered = [c for c in config.CATEGORY_ORDER if c in found]
+    def _order_categories(self, found: set[str]) -> list[str]:
+        order = self.character.category_order
+        ordered = [c for c in order if c in found]
         ordered += sorted(found - set(ordered))
         return ordered

@@ -1,22 +1,12 @@
 /* ============================================================
-   Viego Soundboard — Shadow Isles theme
+   Soundboard framework — base structural styles
    Mobile-first. Big tap targets for use in costume/gloves.
+   Brand colors and --font-display come from /theme.css, generated
+   per-character from character.toml + optional theme.css overrides.
    ============================================================ */
 
 :root {
-  --abyss: #0a0f12;        /* page background */
-  --mist: #101a1e;         /* surfaces */
-  --mist-raised: #16242a;  /* raised surfaces / tiles */
-  --edge: #1e3038;         /* borders */
-  --glow: #35e0b8;         /* Viego teal */
-  --glow-soft: rgba(53, 224, 184, 0.18);
-  --bone: #dce8e4;         /* primary text */
-  --muted: #7d9691;        /* secondary text */
-  --danger: #e06060;
-
-  --font-display: "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
   --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-
   --dock-height: 8.25rem;
   --radius: 12px;
 }
@@ -36,7 +26,7 @@ body {
   min-height: 100vh;
   /* ambient mist at the top of the page */
   background:
-    radial-gradient(120% 45% at 50% -10%, rgba(53, 224, 184, 0.08), transparent 60%),
+    radial-gradient(120% 45% at 50% -10%, var(--glow-soft), transparent 60%),
     var(--abyss);
 }
 
@@ -77,7 +67,7 @@ button {
   letter-spacing: 0.22em;
   text-transform: uppercase;
   color: var(--bone);
-  text-shadow: 0 0 18px rgba(53, 224, 184, 0.35);
+  text-shadow: 0 0 18px var(--glow-soft);
 }
 
 .lang-switch {
@@ -207,22 +197,6 @@ button {
 }
 
 .tile-fav[aria-pressed="true"] { color: var(--glow); }
-
-/* signature: mist glow on the playing tile */
-.tile.playing {
-  border-color: var(--glow);
-  animation: mist-pulse 2.4s ease-in-out infinite;
-}
-
-@keyframes mist-pulse {
-  0%, 100% { box-shadow: 0 0 10px rgba(53, 224, 184, 0.25); }
-  50%      { box-shadow: 0 0 26px rgba(53, 224, 184, 0.55); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .tile.playing { animation: none; box-shadow: 0 0 14px rgba(53, 224, 184, 0.4); }
-  .tile:active { transform: none; }
-}
 
 /* ---------- bottom dock ---------- */
 
