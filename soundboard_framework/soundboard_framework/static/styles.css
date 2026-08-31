@@ -1,0 +1,348 @@
+/* ============================================================
+   Soundboard framework — base structural styles
+   Mobile-first. Big tap targets for use in costume/gloves.
+   Brand colors and --font-display come from /theme.css, generated
+   per-character from character.toml + optional theme.css overrides.
+   ============================================================ */
+
+:root {
+  --font-ui: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --dock-height: 8.25rem;
+  --radius: 12px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--abyss);
+  color: var(--bone);
+  font-family: var(--font-ui);
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  min-height: 100vh;
+  /* ambient mist at the top of the page */
+  background:
+    radial-gradient(120% 45% at 50% -10%, var(--glow-soft), transparent 60%),
+    var(--abyss);
+}
+
+button {
+  font-family: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* ---------- top bar ---------- */
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding: 0.6rem 0.9rem 0.5rem;
+  padding-top: calc(0.6rem + env(safe-area-inset-top));
+  background: rgba(10, 15, 18, 0.92);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--edge);
+}
+
+.topbar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.55rem;
+}
+
+.brand {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  font-weight: 400;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--bone);
+  text-shadow: 0 0 18px var(--glow-soft);
+}
+
+.lang-switch {
+  display: flex;
+  border: 1px solid var(--edge);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.lang-switch button {
+  min-width: 3.2rem;
+  padding: 0.5rem 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  background: var(--mist);
+}
+
+.lang-switch button[aria-pressed="true"] {
+  background: var(--glow-soft);
+  color: var(--glow);
+}
+
+.search {
+  width: 100%;
+  padding: 0.65rem 1rem;
+  font-size: 1rem;
+  color: var(--bone);
+  background: var(--mist);
+  border: 1px solid var(--edge);
+  border-radius: 999px;
+  outline: none;
+}
+
+.search:focus { border-color: var(--glow); }
+.search::placeholder { color: var(--muted); }
+
+/* ---------- category chips ---------- */
+
+.chips {
+  display: flex;
+  gap: 0.45rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-bottom: 0.15rem;
+}
+.chips::-webkit-scrollbar { display: none; }
+
+.chip {
+  flex: 0 0 auto;
+  padding: 0.55rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--muted);
+  background: var(--mist);
+  border: 1px solid var(--edge);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.chip[aria-pressed="true"] {
+  color: var(--abyss);
+  background: var(--glow);
+  border-color: var(--glow);
+}
+
+/* ---------- sound board ---------- */
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 0.7rem;
+  padding: 0.9rem;
+  padding-bottom: calc(var(--dock-height) + 1.5rem + env(safe-area-inset-bottom));
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.board-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--muted);
+  padding: 3rem 1rem;
+}
+
+.tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 0.4rem;
+  min-height: 92px;
+  padding: 0.75rem 0.8rem;
+  text-align: left;
+  background: var(--mist-raised);
+  border: 1px solid var(--edge);
+  border-radius: var(--radius);
+  transition: transform 80ms ease, border-color 150ms ease;
+}
+
+.tile:active { transform: scale(0.97); }
+
+.tile-title {
+  font-family: var(--font-display);
+  font-size: 1.02rem;
+  line-height: 1.25;
+  color: var(--bone);
+}
+
+.tile-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.tile-fav {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  padding: 0.5rem;          /* generous target */
+  font-size: 1.05rem;
+  line-height: 1;
+  color: var(--muted);
+}
+
+.tile-fav[aria-pressed="true"] { color: var(--glow); }
+
+/* ---------- bottom dock ---------- */
+
+.dock {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 30;
+  padding: 0 0.9rem calc(0.6rem + env(safe-area-inset-bottom));
+  background: rgba(13, 20, 24, 0.97);
+  backdrop-filter: blur(10px);
+  border-top: 1px solid var(--edge);
+}
+
+.dock.playing { border-top-color: var(--glow); }
+
+.dock-progress {
+  height: 4px;
+  margin: 0 -0.9rem 0.55rem;
+  background: var(--edge);
+  overflow: hidden;
+}
+
+.dock-progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--glow);
+  box-shadow: 0 0 10px var(--glow);
+  transition: width 0.9s linear;
+}
+
+.dock-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.dock-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.dock-title {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dock-time {
+  font-size: 0.78rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.dock-controls {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.ctl {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  color: var(--muted);
+  background: var(--mist-raised);
+  border: 1px solid var(--edge);
+  border-radius: 50%;
+}
+
+.ctl:active { transform: scale(0.94); }
+
+.ctl[aria-pressed="true"] {
+  color: var(--glow);
+  border-color: var(--glow);
+  background: var(--glow-soft);
+}
+
+.ctl-stop { color: var(--danger); }
+.ctl-small { width: 2.4rem; height: 2.4rem; }
+
+.dock-volume {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.5rem;
+}
+
+#volume {
+  flex: 1;
+  height: 2rem;          /* tall touch strip */
+  accent-color: var(--glow);
+}
+
+.vol-value {
+  width: 3.2rem;
+  text-align: right;
+  font-size: 0.82rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.muted .vol-wave { opacity: 0; }
+
+/* ---------- toast ---------- */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--dock-height) + 1rem + env(safe-area-inset-bottom));
+  transform: translate(-50%, 12px);
+  z-index: 40;
+  max-width: 90vw;
+  padding: 0.6rem 1.1rem;
+  font-size: 0.9rem;
+  color: var(--bone);
+  background: var(--mist-raised);
+  border: 1px solid var(--edge);
+  border-radius: 999px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease, transform 200ms ease;
+}
+
+.toast.error { border-color: var(--danger); color: var(--danger); }
+
+.toast.show {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* ---------- larger screens ---------- */
+
+@media (min-width: 700px) {
+  .board { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+  .brand { font-size: 1.7rem; }
+}
+
+/* visible keyboard focus */
+:focus-visible {
+  outline: 2px solid var(--glow);
+  outline-offset: 2px;
+}
