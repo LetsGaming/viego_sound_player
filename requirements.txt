@@ -1,0 +1,1 @@
+soundboard-framework @ git+https://github.com/LetsGaming/soundboard_framework.git
