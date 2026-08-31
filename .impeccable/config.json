@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "layout-transition",
+        "value": "width",
+        "files": [
+          "soundboard_framework/soundboard_framework/static/styles.css"
+        ],
+        "createdAt": "2026-08-31T08:46:32.498Z",
+        "reason": "pre-existing pattern carried over verbatim from original Server/static/styles.css .dock-progress-fill; JS updates width once/sec via polling, not a new design choice"
+      }
+    ]
+  }
+}
