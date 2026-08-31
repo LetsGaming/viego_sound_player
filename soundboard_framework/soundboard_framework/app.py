@@ -27,7 +27,7 @@ TEMPLATES_DIR = FRAMEWORK_DIR / "templates"
 def create_app(character_dir: Path) -> Flask:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
-    character_dir = Path(character_dir)
+    character_dir = Path(character_dir).resolve()
     character = load_character(character_dir)
     sounds_dir = character_dir / "sounds"
     icons_dir = character_dir / "icons"
